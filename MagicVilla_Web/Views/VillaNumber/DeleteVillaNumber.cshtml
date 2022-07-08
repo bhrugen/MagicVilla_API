@@ -1,44 +1,40 @@
-﻿@model MagicVilla_Web.Models.VM.VillaNumberCreateVM
+﻿@model MagicVilla_Web.Models.VM.VillaNumberDeleteVM
 
-<form asp-action="CreateVillaNumber">
+<form asp-action="DeleteVillaNumber">
     <br />
     <div class="container border p-3">
-        <h1 class="text-primary">Create Villa</h1>
+        <h1 class="text-primary">Delete Villa</h1>
         <hr />
-
+        <input hidden asp-for="VillaNumber.VillaNo" />
         <div class="row">
-            <div asp-validation-summary="All" class="text-danger"></div>
 
             <div class="col-2">
                 <label asp-for="VillaNumber.VillaNo" class="control-label pt-2" style="font-size:20px;"></label>
             </div>
             <div class="col-10 pb-3">
-                <input asp-for="VillaNumber.VillaNo" class="form-control" />
-                <span asp-validation-for="VillaNumber.VillaNo" class="text-danger"></span>
+                <input asp-for="VillaNumber.VillaNo" disabled class="form-control" />
             </div>
 
             <div class="col-2">
                 <label asp-for="VillaNumber.VillaID" class="control-label pt-2" style="font-size:20px;"></label>
             </div>
             <div class="col-10 pb-3">
-                <select asp-for="VillaNumber.VillaID" class="form-select" asp-items="@Model.VillaList">
+                <select asp-for="VillaNumber.VillaID" disabled class="form-select" asp-items="@Model.VillaList">
                     <option disabled selected>--Select Villa--</option>
                 </select>
-                <span asp-validation-for="VillaNumber.VillaID" class="text-danger"></span>
             </div>
             <div class="col-2">
                 <label asp-for="VillaNumber.SpecialDetails" class="control-label pt-2" style="font-size:20px;"></label>
             </div>
             <div class="col-10 pb-3">
-                <textarea asp-for="VillaNumber.SpecialDetails" class="form-control" rows="5"></textarea>
-                <span asp-validation-for="VillaNumber.SpecialDetails" class="text-danger"></span>
+                <textarea asp-for="VillaNumber.SpecialDetails" readonly class="form-control" rows="5"></textarea>
             </div>
-           
+
             <div class="col-5 offset-2">
                 <a asp-action="IndexVillaNumber" asp-controller="VillaNumber" class="btn-primary btn form-control ">Back to List</a>
             </div>
             <div class="col-5">
-                <input type="submit" value="Create" class="btn btn-success form-control" />
+                <input type="submit" value="Delete" class="btn btn-success form-control" />
             </div>
         </div>
     </div>
