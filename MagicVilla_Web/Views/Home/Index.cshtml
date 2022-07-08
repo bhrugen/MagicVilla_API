@@ -1,8 +1,42 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
-}
+﻿@using Microsoft.AspNetCore.Components
+@model IEnumerable<MagicVilla_Web.Models.Dto.VillaDTO>
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<img class="d-block w-100" src="images/home/slide1.jpg" alt="">
+
+<hr />
+<div class="row" style="--bs-gutter-x:0">
+    @foreach(var villa in Model){
+        <div class="p-4 col-md-12 col-lg-6">
+            <div class="row" style="border-radius:20px; border: 1px solid #ffffff">
+                <div class="col-4">
+                    <img class="d-block w-100" style="border-radius:20px;" src="@villa.ImageUrl" alt="First slide">
+                </div>
+                <div class="col-8">
+                    <p class="card-title text-warning" style="font-size:xx-large">@villa.Name</p>
+                    <p class="card-text">
+                        @((MarkupString)villa.Details)
+                    </p>
+                </div>
+                <div class="col-12">
+                    <div class="row pb-3 pt-2">
+                        <div class="col-4">
+                            <a href="" class="btn btn-success form-control btn-block">Book</a>
+                        </div>
+                        <div class="col-4">
+                            <span class="">Max Occupancy : @villa.Occupancy adults </span><br />
+                            <span class=" pt-1">Villa Size : @villa.Sqft sqft</span><br />
+                        </div>
+                        <div class="col-4">
+                            <span class="text-warning float-end font-weight-bold pt-1" style="font-size:25px;">
+                                USD
+                                <span style="border-bottom:1px solid #ff6a00">
+                                    @villa.Rate.ToString("c")
+                                </span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
 </div>
