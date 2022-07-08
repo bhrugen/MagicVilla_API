@@ -1,0 +1,72 @@
+﻿@model MagicVilla_Web.Models.Dto.VillaDTO
+
+<form asp-action="DeleteVilla">
+    <br />
+    <div class="container border p-3">
+        <h1 class="text-primary">Delete Villa</h1>
+        <hr />
+
+        <input hidden asp-for="Id" />
+        <div class="row">
+            <div class="col-2">
+                <label asp-for="Name" class="control-label pt-2" style="font-size:20px;"></label>
+            </div>
+            <div class="col-10 pb-3">
+                <input asp-for="Name" disabled class="form-control" />
+            </div>
+
+            <div class="col-2">
+                <label asp-for="Rate" class="control-label pt-2" style="font-size:20px;"></label>
+            </div>
+            <div class="col-10 pb-3">
+                <input asp-for="Rate" disabled class="form-control" />
+            </div>
+
+            <div class="col-2">
+                <label asp-for="Details" class="control-label pt-2" style="font-size:20px;"></label>
+            </div>
+            <div class="col-10 pb-3">
+                <textarea asp-for="Details" disabled class="form-control" rows="5"></textarea>
+            </div>
+
+            <div class="col-2">
+                <label asp-for="ImageUrl" class="control-label pt-2" style="font-size:20px;"></label>
+            </div>
+            <div class="col-10 pb-3">
+                <input asp-for="ImageUrl" disabled class="form-control" />
+            </div>
+
+            <div class="col-2">
+                <label asp-for="Occupancy" class="control-label pt-2" style="font-size:20px;"></label>
+            </div>
+            <div class="col-10 pb-3">
+                <input asp-for="Occupancy" disabled class="form-control" />
+            </div>
+
+            <div class="col-2">
+                <label asp-for="Sqft" class="control-label pt-2" style="font-size:20px;"></label>
+            </div>
+            <div class="col-10 pb-3">
+                <input asp-for="Sqft" disabled class="form-control" />
+            </div>
+
+            <div class="col-2">
+                <label asp-for="Amenity" class="control-label pt-2" style="font-size:20px;"></label>
+            </div>
+            <div class="col-10 pb-3">
+                <textarea asp-for="Amenity" disabled class="form-control"></textarea>
+            </div>
+            <div class="col-5 offset-2">
+                <a asp-action="IndexVilla" asp-controller="Villa" class="btn-primary btn form-control ">Back to List</a>
+            </div>
+            <div class="col-5">
+                <input type="submit" value="Delete" class="btn btn-danger form-control" />
+            </div>
+        </div>
+    </div>
+</form>
+
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
