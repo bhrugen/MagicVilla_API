@@ -34,8 +34,7 @@
                             <a class="nav-link text-dark" asp-area="" asp-controller="VillaNumber" asp-action="IndexVillaNumber">Villa Number</a>
                         </li>
 
-                        @if (httpAcc.HttpContext.Session.GetString(SD.SessionToken) != null &&
-           httpAcc.HttpContext.Session.GetString(SD.SessionToken).ToString().Length > 0)
+                        @if (User.Identity.IsAuthenticated)
                         {
                             <li class="nav-item">
                                 <a class="nav-link text-dark" asp-controller="Auth" asp-action="Logout">Logout</a>

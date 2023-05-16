@@ -4,6 +4,7 @@ using MagicVilla_Web.Models.Dto;
 using MagicVilla_Web.Services.IServices;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using System.IdentityModel.Tokens.Jwt;
@@ -20,10 +21,13 @@ namespace MagicVilla_Web.Controllers
         }
 
         [HttpGet]
-        public IActionResult Login()
+        [Authorize]
+        public async Task<IActionResult> Login()
         {
-            LoginRequestDTO obj = new();
-            return View(obj);
+            var accessToken = await HttpContext.GetTokenAsync("access_token");
+            return RedirectToAction(nameof(Index), "Home");
+            //LoginRequestDTO obj = new();
+            //return View(obj);
         }
 
         [HttpPost]
@@ -78,6 +82,7 @@ namespace MagicVilla_Web.Controllers
         public async Task<IActionResult> Logout()
         {
             await HttpContext.SignOutAsync();
+            SignOut("Cookies", "oidc");
             HttpContext.Session.SetString(SD.SessionToken, "");
             return RedirectToAction("Index","Home");
         }
