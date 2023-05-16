@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace MagicVilla_VillaAPI.Repository
@@ -57,25 +58,20 @@ namespace MagicVilla_VillaAPI.Repository
             }
 
             //if user was found generate JWT Token
-            var roles = await _userManager.GetRolesAsync(user);
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes(secretKey);
-
-            var tokenDescriptor = new SecurityTokenDescriptor
+            RefreshToken refreshToken = new()
             {
-                Subject = new ClaimsIdentity(new Claim[]
-                {
-                    new Claim(ClaimTypes.Name, user.UserName.ToString()),
-                    new Claim(ClaimTypes.Role, roles.FirstOrDefault())
-                }),
-                Expires = DateTime.UtcNow.AddMinutes(5),
-                SigningCredentials = new(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+                Refresh_Token = Guid.NewGuid() + "-"+ Guid.NewGuid(),
+                ExpiresAt = DateTime.UtcNow.AddDays(30),
+                IsValid = true,
+                UserId = user.Id
             };
+            _db.RefreshToken.Add(refreshToken);
+            _db.SaveChanges();
 
-            var token = tokenHandler.CreateToken(tokenDescriptor);
             LoginResponseDTO loginResponseDTO = new LoginResponseDTO()
             {
-                Token = tokenHandler.WriteToken(token),
+                Token = GenerateJwtToken(user),
+                RefreshToken = refreshToken.Refresh_Token,
                 User = _mapper.Map<UserDTO>(user),
                 
             };
@@ -113,6 +109,27 @@ namespace MagicVilla_VillaAPI.Repository
             }
 
             return new UserDTO();
+        }
+
+        private  string GenerateJwtToken(ApplicationUser user)
+        {
+            var roles = _userManager.GetRolesAsync(user).GetAwaiter().GetResult();
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.ASCII.GetBytes(secretKey);
+
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new Claim[]
+                {
+                    new Claim(ClaimTypes.Name, user.UserName.ToString()),
+                    new Claim(ClaimTypes.Role, roles.FirstOrDefault())
+                }),
+                Expires = DateTime.UtcNow.AddMinutes(5),
+                SigningCredentials = new(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+            };
+
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            return tokenHandler.WriteToken(token);
         }
     }
 }
