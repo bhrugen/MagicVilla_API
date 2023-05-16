@@ -48,6 +48,7 @@ builder.Services.AddAuthentication(x =>
     .AddJwtBearer(x => {
         x.RequireHttpsMetadata = false;
         x.SaveToken = true;
+        x.Authority = "https://localhost:7003/";
         x.TokenValidationParameters = new TokenValidationParameters
         {
                 ValidateIssuerSigningKey = true,
@@ -56,7 +57,14 @@ builder.Services.AddAuthentication(x =>
                 ValidateAudience = false
             };
 });
-
+//builder.Services.AddAuthorization(options =>
+//{
+//    options.AddPolicy("ApiScope", policy =>
+//    {
+//        policy.RequireAuthenticatedUser();
+//        policy.RequireClaim("scope", "mango");
+//    });
+//});
 builder.Services.AddControllers(option => {
     option.CacheProfiles.Add("Default30",
        new CacheProfile()
