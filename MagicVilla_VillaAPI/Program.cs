@@ -12,6 +12,7 @@ using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
 using MagicVilla_VillaAPI.Models;
+using MagicVilla_VillaAPI.DbInitializer;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,6 +26,7 @@ builder.Services.AddResponseCaching();
 builder.Services.AddScoped<IVillaRepository, VillaRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IVillaNumberRepository, VillaNumberRepository>();
+builder.Services.AddScoped<IDbInitializer, DbInitializer>();
 builder.Services.AddAutoMapper(typeof(MappingConfig));
 builder.Services.AddApiVersioning(options => {
     options.AssumeDefaultVersionWhenUnspecified = true;
@@ -147,5 +149,13 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-
+SeedDatabase();
 app.Run();
+void SeedDatabase()
+{
+    using (var scope = app.Services.CreateScope())
+    {
+        var dbInitializer = scope.ServiceProvider.GetRequiredService<IDbInitializer>();
+        dbInitializer.Initialize();
+    }
+}
