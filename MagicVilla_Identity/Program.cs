@@ -1,3 +1,4 @@
+using MagicVilla_Identity;
 using MagicVilla_Identity.Data;
 using MagicVilla_Identity.Models;
 using Microsoft.AspNetCore.Identity;
@@ -20,7 +21,10 @@ builder.Services.AddIdentityServer(options =>
     options.Events.RaiseFailureEvents = true;
     options.Events.RaiseSuccessEvents = true;
     options.EmitStaticAudienceClaim = true;
-});
+}).AddInMemoryIdentityResources(SD.IdentityResources)
+.AddInMemoryApiScopes(SD.ApiScopes)
+.AddInMemoryClients(SD.Cleints).AddAspNetIdentity<ApplicationUser>()
+.AddDeveloperSigningCredential(); 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

@@ -16,20 +16,17 @@ namespace MagicVilla_Identity
                 new IdentityResources.Email(),
                 new IdentityResources.Profile(),
             };
-        public static IEnumerable<ApiScope> ApiScopes()
-        {
-            return new List<ApiScope>
+        public static IEnumerable<ApiScope> ApiScopes =>
+            new List<ApiScope>
             {
                 new ApiScope("magic", "Magic Server"),
                 new ApiScope(name: "read",   displayName: "Read your data."),
                 new ApiScope(name: "write",  displayName: "Write your data."),
                 new ApiScope(name: "delete", displayName: "Delete your data.")
             };
-        }
 
-        public static IEnumerable<Client> Get()
-        {
-            return new List<Client>
+        public static IEnumerable<Client> Cleints =>
+       new List<Client>
             {
                 new Client
                 {
@@ -52,6 +49,5 @@ namespace MagicVilla_Identity
                     PostLogoutRedirectUris={"https://localhost:7002/signout-callback-oidc" },
                 }
             };
-        }
     }
 }
