@@ -39,6 +39,13 @@ builder.Services.AddVersionedApiExplorer(options =>
 
 
 var key = builder.Configuration.GetValue<string>("ApiSettings:Secret");
+var tokenValidationParameters = new TokenValidationParameters
+{
+    ValidateIssuerSigningKey = true,
+    IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(key)),
+    ValidateIssuer = false,
+    ValidateAudience = false
+};
 
 builder.Services.AddAuthentication(x =>
 {
@@ -48,21 +55,15 @@ builder.Services.AddAuthentication(x =>
     .AddJwtBearer(x => {
         x.RequireHttpsMetadata = false;
         x.SaveToken = true;
-        x.TokenValidationParameters = new TokenValidationParameters
-        {
-                ValidateIssuerSigningKey = true,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(key)),
-                ValidateIssuer = false,
-                ValidateAudience = false
-            };
+        x.TokenValidationParameters = tokenValidationParameters;
 });
 
 builder.Services.AddControllers(option => {
-    option.CacheProfiles.Add("Default30",
-       new CacheProfile()
-       {
-           Duration = 30
-       });
+    //option.CacheProfiles.Add("Default30",
+    //   new CacheProfile()
+    //   {
+    //       Duration = 30
+    //   });
     //option.ReturnHttpNotAcceptable=true;
 }).AddNewtonsoftJson().AddXmlDataContractSerializerFormatters();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
