@@ -15,7 +15,7 @@
                     <h2>Register</h2>
                 </div>
                 <div class="card-body">
-                    <form>
+                    <form asp-route="Register">
                         <input type="hidden" asp-for="Input.ReturnUrl" />
                         <div class="form-group">
                             <label asp-for="Input.Email"></label>
@@ -35,7 +35,7 @@
                             <select asp-for="Input.RoleName" class="form-control"
                                     asp-items="@(new SelectList(role_list))"></select>
                         </div>
-                        <button class="btn btn-primary" name="button" value="register">Register</button>
+                        <button type="submit" class="btn btn-primary" name="button" value="register">Register</button>
                     </form>
                 </div>
                 <div class="card-footer">
