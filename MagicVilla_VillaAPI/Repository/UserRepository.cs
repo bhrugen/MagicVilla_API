@@ -56,13 +56,14 @@ namespace MagicVilla_VillaAPI.Repository
                     User = null
                 };
             }
-
+            string JwtTokenId = "Jwt-"+Guid.NewGuid().ToString();
             //if user was found generate JWT Token
             RefreshToken refreshToken = new()
             {
                 Refresh_Token = Guid.NewGuid() + "-"+ Guid.NewGuid(),
                 ExpiresAt = DateTime.UtcNow.AddDays(30),
                 IsValid = true,
+                JwtTokenId=JwtTokenId,
                 UserId = user.Id
             };
             _db.RefreshToken.Add(refreshToken);
@@ -70,7 +71,7 @@ namespace MagicVilla_VillaAPI.Repository
 
             LoginResponseDTO loginResponseDTO = new LoginResponseDTO()
             {
-                Token = GenerateJwtToken(user),
+                Token = GenerateJwtToken(user,refreshToken),
                 RefreshToken = refreshToken.Refresh_Token,
                 User = _mapper.Map<UserDTO>(user),
                 
@@ -111,7 +112,7 @@ namespace MagicVilla_VillaAPI.Repository
             return new UserDTO();
         }
 
-        private  string GenerateJwtToken(ApplicationUser user)
+        private  string GenerateJwtToken(ApplicationUser user, RefreshToken refreshToken)
         {
             var roles = _userManager.GetRolesAsync(user).GetAwaiter().GetResult();
             var tokenHandler = new JwtSecurityTokenHandler();
@@ -122,7 +123,8 @@ namespace MagicVilla_VillaAPI.Repository
                 Subject = new ClaimsIdentity(new Claim[]
                 {
                     new Claim(ClaimTypes.Name, user.UserName.ToString()),
-                    new Claim(ClaimTypes.Role, roles.FirstOrDefault())
+                    new Claim(ClaimTypes.Role, roles.FirstOrDefault()),
+                    new Claim("JwtTokenId",refreshToken.JwtTokenId)
                 }),
                 Expires = DateTime.UtcNow.AddMinutes(5),
                 SigningCredentials = new(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
