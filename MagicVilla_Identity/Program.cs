@@ -1,3 +1,4 @@
+using Duende.IdentityServer.Services;
 using MagicVilla_Identity;
 using MagicVilla_Identity.Data;
 using MagicVilla_Identity.IDbInitializer;
@@ -27,7 +28,9 @@ builder.Services.AddIdentityServer(options =>
 }).AddInMemoryIdentityResources(SD.IdentityResources)
 .AddInMemoryApiScopes(SD.ApiScopes)
 .AddInMemoryClients(SD.Cleints).AddAspNetIdentity<ApplicationUser>()
-.AddDeveloperSigningCredential(); 
+.AddDeveloperSigningCredential().AddProfileService<ProfileService>();
+
+builder.Services.AddScoped<IProfileService, ProfileService>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
