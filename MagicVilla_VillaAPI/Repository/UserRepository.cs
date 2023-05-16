@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using IdentityModel;
 using MagicVilla_VillaAPI.Data;
 using MagicVilla_VillaAPI.Models;
 using MagicVilla_VillaAPI.Models.Dto;
@@ -17,15 +18,18 @@ namespace MagicVilla_VillaAPI.Repository
         private readonly ApplicationDbContext _db;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly TokenValidationParameters _tokenValidationParameters;
         private string secretKey;
         private readonly IMapper _mapper;
 
         public UserRepository(ApplicationDbContext db, IConfiguration configuration,
+            TokenValidationParameters tokenValidationParameters,
             UserManager<ApplicationUser> userManager, IMapper mapper, RoleManager<IdentityRole> roleManager)
         {
             _db = db;
             _mapper = mapper;
             _userManager = userManager;
+            _tokenValidationParameters = tokenValidationParameters;
             secretKey = configuration.GetValue<string>("ApiSettings:Secret");
             _roleManager = roleManager;
         }
@@ -53,28 +57,15 @@ namespace MagicVilla_VillaAPI.Repository
                 return new LoginResponseDTO()
                 {
                     Token = "",
-                    User = null
+                    RefreshToken=""
                 };
             }
-            string JwtTokenId = "Jwt-"+Guid.NewGuid().ToString();
-            //if user was found generate JWT Token
-            RefreshToken refreshToken = new()
-            {
-                Refresh_Token = Guid.NewGuid() + "-"+ Guid.NewGuid(),
-                ExpiresAt = DateTime.UtcNow.AddDays(30),
-                IsValid = true,
-                JwtTokenId=JwtTokenId,
-                UserId = user.Id
-            };
-            _db.RefreshToken.Add(refreshToken);
-            _db.SaveChanges();
 
-            LoginResponseDTO loginResponseDTO = new LoginResponseDTO()
+            TokenRequestDTO tokenRequest = GenerateJwtToken(user);
+            LoginResponseDTO loginResponseDTO = new()
             {
-                Token = GenerateJwtToken(user,refreshToken),
-                RefreshToken = refreshToken.Refresh_Token,
-                User = _mapper.Map<UserDTO>(user),
-                
+                Token = tokenRequest.JwtToken,
+                RefreshToken = tokenRequest.RefreshToken,
             };
             return loginResponseDTO;
         }
@@ -112,7 +103,61 @@ namespace MagicVilla_VillaAPI.Repository
             return new UserDTO();
         }
 
-        private  string GenerateJwtToken(ApplicationUser user, RefreshToken refreshToken)
+        public async Task<LoginResponseDTO> GenerateNewTokenFromRefreshToken(TokenRequestDTO tokenRequestDTO)
+        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var tokenVerification = tokenHandler.ValidateToken(tokenRequestDTO.JwtToken, _tokenValidationParameters, out var validatedToken);
+
+            if (validatedToken != null)
+            {
+                //check our custom validations
+                //Get claims from Token
+                var jwt = tokenHandler.ReadJwtToken(tokenRequestDTO.JwtToken);
+                var name = jwt.Claims.FirstOrDefault(u => u.Type == "name").Value;
+                var jwtTokenId = jwt.Claims.FirstOrDefault(u => u.Type == JwtRegisteredClaimNames.Jti).Value;
+                var userID = jwt.Claims.FirstOrDefault(u => u.Type == JwtRegisteredClaimNames.Sub).Value;
+
+                var refreshTokenFromDb = _db.RefreshToken.FirstOrDefault(u => u.UserId == userID 
+                && u.JwtTokenId == jwtTokenId && u.Refresh_Token==tokenRequestDTO.RefreshToken);
+                if (refreshTokenFromDb != null)
+                {
+                    //userid and jti combination is valid
+                    if (refreshTokenFromDb.ExpiresAt <= DateTime.Now)
+                    {
+                        //refresh token expired
+                        return new LoginResponseDTO();
+                    }
+                    if (!refreshTokenFromDb.IsValid)
+                    {
+                        return new LoginResponseDTO();
+                    }
+                    ApplicationUser applicationUser = _db.ApplicationUsers.FirstOrDefault(u => u.Id == userID);
+                    if (applicationUser != null)
+                    {
+                        //update old token
+                        refreshTokenFromDb.IsValid = false;
+
+                        //generate new token
+                        TokenRequestDTO tokenResponse =  GenerateJwtToken(applicationUser);
+                        return new LoginResponseDTO()
+                        {
+                            Token = tokenResponse.JwtToken,
+                            RefreshToken = tokenResponse.RefreshToken
+                        };
+                    }
+                }
+                else
+                {
+                    //no refresh token found
+                    return new LoginResponseDTO();
+                }
+
+            }
+            return new LoginResponseDTO();
+
+        }
+
+        private TokenRequestDTO GenerateJwtToken(ApplicationUser user)
         {
             var roles = _userManager.GetRolesAsync(user).GetAwaiter().GetResult();
             var tokenHandler = new JwtSecurityTokenHandler();
@@ -124,14 +169,34 @@ namespace MagicVilla_VillaAPI.Repository
                 {
                     new Claim(ClaimTypes.Name, user.UserName.ToString()),
                     new Claim(ClaimTypes.Role, roles.FirstOrDefault()),
-                    new Claim("JwtTokenId",refreshToken.JwtTokenId)
+                    new Claim(JwtRegisteredClaimNames.Jti,"JTI"+Guid.NewGuid().ToString()),
+                    new Claim(JwtRegisteredClaimNames.Sub,user.Id)
                 }),
                 Expires = DateTime.UtcNow.AddMinutes(5),
                 SigningCredentials = new(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
 
             var token = tokenHandler.CreateToken(tokenDescriptor);
-            return tokenHandler.WriteToken(token);
+
+            //if user was found generate JWT Token
+            RefreshToken newRefreshToken = new()
+            {
+                Refresh_Token = Guid.NewGuid() + "-" + Guid.NewGuid(),
+                ExpiresAt = DateTime.UtcNow.AddDays(30),
+                IsValid = true,
+                JwtTokenId = token.Id,
+                UserId = user.Id
+            };
+            _db.RefreshToken.Add(newRefreshToken);
+            _db.SaveChanges();
+
+            return new TokenRequestDTO()
+            {
+                JwtToken = tokenHandler.WriteToken(token),
+                RefreshToken = newRefreshToken.Refresh_Token
+            };
+            
+
         }
     }
 }

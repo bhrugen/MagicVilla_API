@@ -23,7 +23,7 @@ namespace MagicVilla_VillaAPI.Controllers
         public async Task<IActionResult> Login([FromBody] LoginRequestDTO model)
         {
             var loginResponse = await _userRepo.Login(model);
-            if (loginResponse.User == null || string.IsNullOrEmpty(loginResponse.Token))
+            if (loginResponse!=null &&  string.IsNullOrEmpty(loginResponse.Token))
             {
                 _response.StatusCode = HttpStatusCode.BadRequest;
                 _response.IsSuccess = false;
@@ -61,5 +61,30 @@ namespace MagicVilla_VillaAPI.Controllers
             _response.IsSuccess = true;
             return Ok(_response);
         }
+
+        [HttpPost("GetNewTokenFromRefreshToken")]
+        public async Task<IActionResult> GetNewTokenFromRefreshToken([FromBody] TokenRequestDTO tokenRequest)
+        {
+            if (ModelState.IsValid)
+            {
+                var loginResponse = await _userRepo.GenerateNewTokenFromRefreshToken(tokenRequest);
+                if (loginResponse!=null && string.IsNullOrEmpty(loginResponse.Token))
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.IsSuccess = false;
+                    _response.ErrorMessages.Add("Token Invalid");
+                    return BadRequest(_response);
+                }
+                _response.StatusCode = HttpStatusCode.OK;
+                _response.IsSuccess = true;
+                _response.Result = loginResponse;
+                return Ok(_response);
+            }
+            _response.IsSuccess = false;
+            _response.Result = "Invalid Input";
+            return BadRequest(_response);
+            
+        }
+
     }
 }
