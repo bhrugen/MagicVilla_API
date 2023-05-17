@@ -31,7 +31,7 @@ namespace MagicVilla_VillaAPI.Controllers.v1
 
 
         [HttpGet]
-        [ResponseCache(CacheProfileName = "Default30")]
+        //[ResponseCache(CacheProfileName = "Default30")]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -116,14 +116,11 @@ namespace MagicVilla_VillaAPI.Controllers.v1
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<APIResponse>> CreateVilla([FromBody] VillaCreateDTO createDTO)
+        public async Task<ActionResult<APIResponse>> CreateVilla(VillaCreateDTO createDTO, IFormFile imagee)
         {
             try
             {
-                //if (!ModelState.IsValid)
-                //{
-                //    return BadRequest(ModelState);
-                //}
+              
                 if (await _dbVilla.GetAsync(u => u.Name.ToLower() == createDTO.Name.ToLower()) != null)
                 {
                     ModelState.AddModelError("ErrorMessages", "Villa already Exists!");
@@ -134,23 +131,40 @@ namespace MagicVilla_VillaAPI.Controllers.v1
                 {
                     return BadRequest(createDTO);
                 }
-                //if (villaDTO.Id > 0)
-                //{
-                //    return StatusCode(StatusCodes.Status500InternalServerError);
-                //}
+              
                 Villa villa = _mapper.Map<Villa>(createDTO);
 
-                //Villa model = new()
-                //{
-                //    Amenity = createDTO.Amenity,
-                //    Details = createDTO.Details,
-                //    ImageUrl = createDTO.ImageUrl,
-                //    Name = createDTO.Name,
-                //    Occupancy = createDTO.Occupancy,
-                //    Rate = createDTO.Rate,
-                //    Sqft = createDTO.Sqft
-                //};
                 await _dbVilla.CreateAsync(villa);
+
+                if (createDTO.Image != null)
+                {
+
+                    string fileName = villa.Id + Path.GetExtension(createDTO.Image.FileName);
+                    string filePath = @"wwwroot\ProductImages\" + fileName;
+
+                    //I have added the if condition to remove the any image with same name if that exist in the folder by any change
+                    var directoryLocation = Path.Combine(Directory.GetCurrentDirectory(), filePath);
+                    FileInfo file = new FileInfo(directoryLocation);
+                    if (file.Exists)
+                    {
+                        file.Delete();
+                    }
+
+                    var filePathDirectory = Path.Combine(Directory.GetCurrentDirectory(), filePath);
+                    using (var fileStream = new FileStream(filePathDirectory, FileMode.Create))
+                    {
+                        createDTO.Image.CopyTo(fileStream);
+                    }
+                    var baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.Value}{HttpContext.Request.PathBase.Value}";
+                    villa.ImageUrl = baseUrl + "/ProductImages/" + fileName;
+                    villa.ImageLocalPath = filePath;
+                }
+                else
+                {
+                    villa.ImageUrl = "https://placehold.co/600x400";
+                }
+                await _dbVilla.UpdateAsync(villa);
+
                 _response.Result = _mapper.Map<VillaDTO>(villa);
                 _response.StatusCode = HttpStatusCode.Created;
                 return CreatedAtRoute("GetVilla", new { id = villa.Id }, _response);
@@ -184,6 +198,15 @@ namespace MagicVilla_VillaAPI.Controllers.v1
                 {
                     return NotFound();
                 }
+                if (!string.IsNullOrEmpty(villa.ImageLocalPath))
+                {
+                    var oldFilePathDirectory = Path.Combine(Directory.GetCurrentDirectory(), villa.ImageLocalPath);
+                    FileInfo file = new FileInfo(oldFilePathDirectory);
+                    if (file.Exists)
+                    {
+                        file.Delete();
+                    }
+                }
                 await _dbVilla.RemoveAsync(villa);
                 _response.StatusCode = HttpStatusCode.NoContent;
                 _response.IsSuccess = true;
@@ -201,7 +224,7 @@ namespace MagicVilla_VillaAPI.Controllers.v1
         [HttpPut("{id:int}", Name = "UpdateVilla")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult<APIResponse>> UpdateVilla(int id, [FromBody] VillaUpdateDTO updateDTO)
+        public async Task<ActionResult<APIResponse>> UpdateVilla(int id, VillaUpdateDTO updateDTO)
         {
             try
             {
@@ -211,6 +234,29 @@ namespace MagicVilla_VillaAPI.Controllers.v1
                 }
 
                 Villa model = _mapper.Map<Villa>(updateDTO);
+                if (updateDTO.Image != null)
+                {
+                    if (!string.IsNullOrEmpty(model.ImageLocalPath))
+                    {
+                        var oldFilePathDirectory = Path.Combine(Directory.GetCurrentDirectory(), model.ImageLocalPath);
+                        FileInfo file = new FileInfo(oldFilePathDirectory);
+                        if (file.Exists)
+                        {
+                            file.Delete();
+                        }
+                    }
+
+                    string fileName = model.Id + Path.GetExtension(updateDTO.Image.FileName);
+                    string filePath = @"wwwroot\ProductImages\" + fileName;
+                    var filePathDirectory = Path.Combine(Directory.GetCurrentDirectory(), filePath);
+                    using (var fileStream = new FileStream(filePathDirectory, FileMode.Create))
+                    {
+                        updateDTO.Image.CopyTo(fileStream);
+                    }
+                    var baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.Value}{HttpContext.Request.PathBase.Value}";
+                    model.ImageUrl = baseUrl + "/ProductImages/" + fileName;
+                    model.ImageLocalPath = filePath;
+                }
 
                 await _dbVilla.UpdateAsync(model);
                 _response.StatusCode = HttpStatusCode.NoContent;

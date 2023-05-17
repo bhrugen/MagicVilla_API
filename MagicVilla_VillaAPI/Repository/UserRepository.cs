@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using IdentityModel;
 using MagicVilla_VillaAPI.Data;
 using MagicVilla_VillaAPI.Models;
 using MagicVilla_VillaAPI.Models.Dto;
