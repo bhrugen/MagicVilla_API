@@ -25,12 +25,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="wwwroot\" />
-    <Folder Include="wwwroot\ProductImages\" />
+    <ProjectReference Include="..\MagicVilla_Utility\MagicVilla_Utility.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MagicVilla_Utility\MagicVilla_Utility.csproj" />
+    <Folder Include="wwwroot\ProductImages\" />
   </ItemGroup>
 
 </Project>

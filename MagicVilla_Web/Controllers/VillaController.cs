@@ -97,7 +97,6 @@ namespace MagicVilla_Web.Controllers
         }
         [Authorize(Roles = "admin")]
         [HttpPost]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteVilla(VillaDTO model)
         {
             
